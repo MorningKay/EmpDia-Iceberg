@@ -1,0 +1,104 @@
+# 按你项目结构：保存到  /root/EmpDia-Iceberg/configs/multiturn_grpo_interaction.yaml
+
+hydra:
+  # 让 Hydra 能加载 VERL 自带的默认配置（pip 安装即可，无需复制源码目录）
+  searchpath:
+    - pkg://verl/trainer/config
+
+defaults:
+  - ppo_trainer
+  - _self_
+
+# ===== 算法 =====
+algorithm:
+  adv_estimator: grpo
+  use_kl_in_reward: false
+
+# ===== 数据 =====
+data:
+  train_files: data/train.parquet     # 改成你的 parquet
+  val_files: data/test.parquet      # 或者 val.parquet
+  train_batch_size: 256
+  max_prompt_length: 1024
+  max_response_length: 1024
+  truncation: error
+  filter_overlong_prompts: true
+  return_raw_chat: true
+
+# ===== 训练器 =====
+trainer:
+  device: cuda
+  default_local_dir: outputs
+  total_epochs: 15
+  logger: [console, wandb]
+  project_name: EmpDiaIceberg
+  experiment_name: grpo_empathy
+  nnodes: 1
+  n_gpus_per_node: 1
+  resume_mode: auto
+  save_freq: -1
+  test_freq: 20
+  critic_warmup: 0
+
+# ===== 模型 / Rollout / Ref =====
+actor_rollout_ref:
+  hybrid_engine: true
+
+  model:
+    path: models/Qwen2.5-0.5B-Instruct
+    dtype: bfloat16
+    use_remove_padding: true
+    enable_gradient_checkpointing: true
+    enable_activation_offloading: false
+
+  # ===== Actor（训练）=====
+  actor:
+    ppo_mini_batch_size: ${data.train_batch_size}
+    ppo_micro_batch_size_per_gpu: 8
+    use_kl_loss: true
+    kl_loss_coef: 0.001
+    kl_loss_type: low_var_kl
+    entropy_coeff: 0.0
+    fsdp_config:
+      fsdp_size: ${trainer.n_gpus_per_node}
+      reshard_after_forward: true
+      param_offload: false
+      optimizer_offload: false
+
+  # ===== Ref（对数似然评估）=====
+  ref:
+    log_prob_micro_batch_size_per_gpu: 8
+    fsdp_config:
+      fsdp_size: ${trainer.n_gpus_per_node}
+      reshard_after_forward: true
+      param_offload: false
+      optimizer_offload: false
+
+  # ===== Rollout（SGLang 推理后端）=====
+  rollout:
+    name: sglang
+    tensor_model_parallel_size: 1
+
+    # 这些键是你之前缺的，SGLang 会用到
+    prompt_length:  ${data.max_prompt_length}
+    response_length: ${data.max_response_length}
+    dtype: bfloat16
+    gpu_memory_utilization: 0.7
+    n: 2
+    temperature: 1.0
+    top_p: 1.0
+    top_k: -1
+    do_sample: true
+    log_prob_micro_batch_size_per_gpu: 8
+
+    val_kwargs:
+      n: 1
+      do_sample: false
+
+    multi_turn:
+      enable: true
+      max_user_turns: 20
+      max_assistant_turns: 20
+      interaction_config_path: configs/interaction_config.yaml
+
+

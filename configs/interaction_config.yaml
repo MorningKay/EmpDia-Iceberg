@@ -1,0 +1,19 @@
+interaction:
+  - name: "empathetic_agent"
+    class_name: "empathy_interaction.EmpatheticInteraction"
+    config:
+      stop_on_score: 99.0
+      default_max_turns: 12
+      cls_checkpoint: /root/shared-nvme/myx/classifier-ckpt/cls_new/cls_20251102-155933
+      k: 12.0
+      c: 0.5
+      beta: 0.7
+      delta: 0.6
+      w: 5
+      eta_align: 0.3
+      model_config_path: /root/shared-nvme/myx/codes/LLaMA-Factory/examples/inference/qwen2.5_0.5b_lora_sft_user.yaml
+      generation_kwargs:
+        max_new_tokens: 256
+        temperature: 0.7
+        top_p: 0.9
+      allow_empty_history: true
