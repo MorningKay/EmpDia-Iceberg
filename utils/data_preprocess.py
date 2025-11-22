@@ -88,7 +88,7 @@ def main():
     if isinstance(data, dict):
         data = [data]
 
-    data = data[:16] # debug number
+    # data = data[:1] # debug number
     rows = [ex_to_row(ex, args.split) for ex in data]
     ds = Dataset.from_list(rows)
     out_path = os.path.join(out_dir, f"{args.split}.parquet")

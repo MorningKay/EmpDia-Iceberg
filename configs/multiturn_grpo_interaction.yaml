@@ -98,7 +98,7 @@ actor_rollout_ref:
     multi_turn:
       enable: true
       max_user_turns: 20
-      max_assistant_turns: 20
+      max_assistant_turns: 21 # if set 20, the model will not return the 20th turn scores (verl/workers/rollout/sglang_rollout/sglang_rollout.py (941) _async_rollout_a_request)
       interaction_config_path: configs/interaction_config.yaml
 
 

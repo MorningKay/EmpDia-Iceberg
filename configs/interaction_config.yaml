@@ -3,7 +3,8 @@ interaction:
     class_name: "empathy_interaction.EmpatheticInteraction"
     config:
       stop_on_score: 99.0
-      default_max_turns: 12
+      default_max_turns: 20
+      retry_on_empty_user: 5
       cls_checkpoint: /root/shared-nvme/myx/classifier-ckpt/cls_new/cls_20251102-155933
       k: 12.0
       c: 0.5
